@@ -79,7 +79,7 @@
       });
 
     // === WEBSOCKET SETUP ===
-    const socket = new WebSocket("ws://192.168.11.32:8000"); // CHANGE THIS to your TD machine IP and WebSocket DAT port
+    const socket = new WebSocket("ws://192.168.11.32:8080"); // CHANGE THIS to your TD machine IP and WebSocket DAT port
 
     socket.onopen = () => {
       console.log("WebSocket connected");
