@@ -90,6 +90,11 @@
       status.innerText = "WebSocket error";
     };
 
+    socket.onmessage = (event) => {
+      console.log("Message from TD:", event.data);
+    // You could update status or react to messages from TD here
+    };
+
     // === DEVICE ORIENTATION ===
     window.addEventListener("deviceorientation", e => {
       const beta = e.beta;   // front-back
