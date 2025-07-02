@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Masu Prototype WebApp</title>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background-color: black;
+      font-family: sans-serif;
+    }
+
+    #videoStream {
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover;
+      display: none; /* Hidden initially */
+    }
+
+    #camPreview {
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover;
+      position: absolute;
+      top: 0;
+      left: 0;
+      opacity: 0.3; /* For debugging: makes camera view semi-transparent */
+    }
+
+    #status {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      color: white;
+      background: rgba(0,0,0,0.5);
+      padding: 5px 10px;
+      border-radius: 5px;
+      font-size: 14px;
+      z-index: 10;
+    }
+
+    #toggleBtn {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 10px 20px;
+      background: white;
+      color: black;
+      border: none;
+      font-size: 16px;
+      z-index: 10;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div id="status">Connecting...</div>
+  <button id="toggleBtn">Show TD Stream</button>
+  <video id="camPreview" autoplay muted playsinline></video>
+  <img id="videoStream" src="http://192.168.0.100:9981/mystream" />
+
+  <script>
+    const status = document.getElementById("status");
+    const camPreview = document.getElementById("camPreview");
+    const videoStream = document.getElementById("videoStream");
+    const toggleBtn = document.getElementById("toggleBtn");
+
+    // === CAMERA PREVIEW ===
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
+      .then(stream => {
+        camPreview.srcObject = stream;
+        status.innerText = "Camera ready";
+      })
+      .catch(err => {
+        console.error("Camera error:", err);
+        status.innerText = "Camera error";
+      });
+
+    // === WEBSOCKET SETUP ===
+    const socket = new WebSocket("ws://localhost:8000"); // CHANGE THIS to your TD machine IP and WebSocket DAT port
+
+    socket.onopen = () => {
+      console.log("WebSocket connected");
+      status.innerText = "WebSocket connected";
+    };
+
+    socket.onerror = () => {
+      status.innerText = "WebSocket error";
+    };
+
+    // === DEVICE ORIENTATION ===
+    window.addEventListener("deviceorientation", e => {
+      const beta = e.beta;   // front-back
+      const gamma = e.gamma; // left-right
+
+      if (Math.abs(beta) > 45 || Math.abs(gamma) > 45) {
+        socket.send("TILT_45");
+      } else {
+        socket.send("NORMAL");
+      }
+    });
+
+    // === TOGGLE TD STREAM ===
+    toggleBtn.addEventListener("click", () => {
+      videoStream.style.display = videoStream.style.display === "none" ? "block" : "none";
+      camPreview.style.display = videoStream.style.display === "block" ? "none" : "block";
+      toggleBtn.innerText = videoStream.style.display === "block" ? "Show Camera" : "Show TD Stream";
+    });
+  </script>
+</body>
+</html>
